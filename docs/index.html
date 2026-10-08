@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>비단길 주봉 매매판</title>
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b4472f'/%3E%3Crect x='8' y='9' width='5' height='14' fill='%23fff'/%3E%3Crect x='19' y='13' width='5' height='10' fill='%23fff' opacity='.6'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --surface-2:#efede7; --line:#e2dfd7;
+  --text:#1b1c1f; --muted:#6b6d73; --faint:#9a9ca2;
+  --accent:#b4472f;
+  --up:#d93d3d; --down:#2f6fd6; --ma:#c48a12; --stop:#7a7d85;
+  --buy:#d93d3d;  --buy-bg:#fdecea;
+  --wait:#b7791f; --wait-bg:#fdf4e2;
+  --new:#2e8b57;  --new-bg:#e7f5ec;
+  --halt:#5f6368; --halt-bg:#eceef0;
+  --warn:#b54708; --warn-bg:#fff1e0;
+  --shadow:0 1px 2px rgba(20,20,20,.05),0 2px 10px rgba(20,20,20,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121316; --surface:#1b1d21; --surface-2:#24272c; --line:#2e3137;
+    --text:#ececee; --muted:#a3a6ad; --faint:#70737a;
+    --accent:#e0795f;
+    --up:#f0605d; --down:#5b95f0; --ma:#e1aa3c; --stop:#8d9099;
+    --buy:#f0716e;  --buy-bg:#3a2020;
+    --wait:#e1aa3c; --wait-bg:#372c18;
+    --new:#5cc58a;  --new-bg:#1b3326;
+    --halt:#a3a6ad; --halt-bg:#2a2d32;
+    --warn:#f2a65a; --warn-bg:#3a2a18;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121316; --surface:#1b1d21; --surface-2:#24272c; --line:#2e3137;
+  --text:#ececee; --muted:#a3a6ad; --faint:#70737a;
+  --accent:#e0795f;
+  --up:#f0605d; --down:#5b95f0; --ma:#e1aa3c; --stop:#8d9099;
+  --buy:#f0716e;  --buy-bg:#3a2020;
+  --wait:#e1aa3c; --wait-bg:#372c18;
+  --new:#5cc58a;  --new-bg:#1b3326;
+  --halt:#a3a6ad; --halt-bg:#2a2d32;
+  --warn:#f2a65a; --warn-bg:#3a2a18;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  word-break:keep-all;overflow-wrap:anywhere}
+.num,.tnum{font-variant-numeric:tabular-nums}
+a{color:inherit}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(40px + env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:4px 0 14px}
+h1{font-size:20px;line-height:1.3;margin:0;letter-spacing:-.01em}
+h1 small{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:2px}
+h2{font-size:15px;margin:28px 0 10px;display:flex;align-items:center;gap:8px}
+h2 .cnt{font-size:12px;font-weight:600;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:12px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.b-final{background:var(--new-bg);color:var(--new)}
+.b-draft{background:var(--warn-bg);color:var(--warn)}
+.b-warn{background:var(--warn-bg);color:var(--warn)}
+.b-flag{background:var(--surface-2);color:var(--muted)}
+.banner{border:1px dashed var(--warn);background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;font:inherit;font-size:12px;padding:5px 10px;cursor:pointer}
+
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{display:block;text-decoration:none;border-radius:12px;padding:10px 8px;text-align:center;background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line)}
+.chip b{display:block;font-size:22px;line-height:1.1}
+.chip span{font-size:12px;color:var(--muted)}
+.chip.zero b{color:var(--faint)}
+.c-buy b{color:var(--buy)} .c-wait b{color:var(--wait)} .c-new b{color:var(--new)} .c-halt b{color:var(--halt)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid var(--st)}
+.card.s-buy{--st:var(--buy)} .card.s-wait{--st:var(--wait)} .card.s-new{--st:var(--new)} .card.s-halt{--st:var(--halt)}
+.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.nm{font-size:16px;font-weight:700;line-height:1.3}
+.nm .code{font-size:12px;font-weight:500;color:var(--muted);margin-left:4px}
+.sub{font-size:12px;color:var(--muted);margin-top:2px}
+.px{text-align:right;flex:none}
+.px b{font-size:18px}
+.px .sub{margin-top:0}
+.badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 8px}
+.kv{background:var(--surface-2);border-radius:8px;padding:6px 8px;min-width:0}
+.kv span{display:block;font-size:11px;color:var(--muted)}
+.kv b{font-size:14px}
+.kv i{font-style:normal;font-size:12px;color:var(--muted);margin-left:2px}
+.spark{display:block;width:100%;height:96px;margin:4px 0 2px}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:2px;vertical-align:middle;margin-right:4px}
+.todo{margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--st-bg);color:var(--text);font-size:14px;font-weight:600}
+.s-buy .todo{--st-bg:var(--buy-bg)} .s-wait .todo{--st-bg:var(--wait-bg)} .s-new .todo{--st-bg:var(--new-bg)} .s-halt .todo{--st-bg:var(--halt-bg)}
+.links{display:flex;gap:14px;margin-top:10px;font-size:13px}
+.links a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:14px;color:var(--muted);font-size:14px}
+.empty b{color:var(--text)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.box p{margin:0 0 8px}
+.diff-row{display:flex;gap:8px;align-items:baseline;padding:4px 0;font-size:14px}
+.diff-row .sg{width:16px;font-weight:700;text-align:center;flex:none}
+.sg-new{color:var(--new)} .sg-chg{color:var(--wait)} .sg-out{color:var(--faint)}
+.check label{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.check label:last-child{border-bottom:0}
+.check input{margin-top:3px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+.check small{display:block;color:var(--muted);font-size:12px}
+.rules{width:100%;border-collapse:collapse;font-size:14px}
+.rules th{text-align:left;font-weight:600;color:var(--muted);width:64px;padding:6px 8px 6px 0;vertical-align:top;font-size:13px}
+.rules td{padding:6px 0;border-bottom:1px solid var(--line)}
+.rules tr:last-child td{border-bottom:0}
+.note{font-size:13px;color:var(--muted);margin-top:10px}
+.score{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.score .kv{background:var(--surface);border:1px solid var(--line);padding:10px}
+.score .kv b{font-size:18px}
+.pos{color:var(--up)} .neg{color:var(--down)}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table.trk{border-collapse:collapse;width:100%;min-width:480px;font-size:13px}
+.trk th,.trk td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.trk th{font-weight:600;color:var(--muted);font-size:12px;background:var(--surface-2)}
+.trk th:first-child,.trk td:first-child{text-align:left}
+.trk tr:last-child td{border-bottom:0}
+footer{margin-top:28px;font-size:12px;color:var(--faint);line-height:1.6}
+.err{padding:20px;border-radius:12px;background:var(--warn-bg);color:var(--warn)}
+@media (max-width:380px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .chip b{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>비단길 주봉 매매판<small>한주에한번매매 · 이번 주 매매 예정 종목군</small></h1>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="테마 전환">테마: 자동</button>
+  </header>
+  <main id="app"><p class="sub">불러오는 중…</p></main>
+  <footer>
+    판정은 scanner.py 의 4조건 그대로이며 이 페이지는 규칙 실행용 표입니다. 투자 권유가 아닙니다.<br>
+    데이터: Yahoo Finance 주봉 · 종목 목록 FinanceDataReader(KRX) · 매주 금요일 16:30 KST 자동 갱신
+  </footer>
+</div>
+<script>
+(function(){
+"use strict";
+
+/* ── 테마 ───────────────────────────── */
+var THEMES=["auto","light","dark"], LABEL={auto:"자동",light:"라이트",dark:"다크"};
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function applyTheme(t){
+  if(t==="auto")document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme",t);
+  document.getElementById("themeBtn").textContent="테마: "+LABEL[t];
+}
+var theme=store("bdg-theme")||"auto"; if(THEMES.indexOf(theme)<0)theme="auto";
+applyTheme(theme);
+document.getElementById("themeBtn").addEventListener("click",function(){
+  theme=THEMES[(THEMES.indexOf(theme)+1)%3]; store("bdg-theme",theme); applyTheme(theme);
+});
+
+/* ── 유틸 ───────────────────────────── */
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function won(n){return n==null?"—":Number(n).toLocaleString("ko-KR")}
+function pct(n,plus){if(n==null)return"—";var s=Number(n).toFixed(1);return (plus&&n>0?"+":"")+s+"%"}
+var DOW="일월화수목금토";
+function md(iso){if(!iso)return"";var d=new Date(iso+"T00:00:00");return (d.getMonth()+1)+"/"+d.getDate()+"("+DOW[d.getDay()]+")"}
+
+var ST={
+  "매수":   {cls:"buy", label:"매수", todo:"오늘 종가 매수, 예약매도 +12%"},
+  "대기":   {cls:"wait",label:"대기", todo:"첫 음봉 금요일 종가에 매수"},
+  "신규조건":{cls:"new", label:"신규", todo:"다음 음봉 대기"},
+  "중단":   {cls:"halt",label:"중단", todo:"이번 신호 폐기"}
+};
+var ORDER=["매수","대기","신규조건","중단"];
+
+/* ── 미니 캔들 (한국식: 양봉 빨강 / 음봉 파랑) ───── */
+function candles(w,stop){
+  var W=320,H=96,P=4,n=w.length; if(!n)return"";
+  var lo=Infinity,hi=-Infinity;
+  w.forEach(function(b){lo=Math.min(lo,b[3]);hi=Math.max(hi,b[2]);if(b[5]!=null){lo=Math.min(lo,b[5]);hi=Math.max(hi,b[5])}});
+  if(stop!=null){lo=Math.min(lo,stop);hi=Math.max(hi,stop)}
+  if(hi===lo)hi=lo+1;
+  var y=function(v){return P+(hi-v)/(hi-lo)*(H-2*P)};
+  var step=W/n, bw=Math.max(3,step*0.62), out=[], ma=[];
+  w.forEach(function(b,i){
+    var cx=step*i+step/2, o=b[1],h=b[2],l=b[3],c=b[4], up=c>=o, col=up?"var(--up)":"var(--down)";
+    var top=y(Math.max(o,c)), bh=Math.max(1.2,Math.abs(y(o)-y(c)));
+    out.push('<line x1="'+cx.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y1="'+y(h).toFixed(1)+'" y2="'+y(l).toFixed(1)+'" stroke="'+col+'" stroke-width="1"/>');
+    out.push('<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="'+col+'"/>');
+    if(b[5]!=null)ma.push(cx.toFixed(1)+","+y(b[5]).toFixed(1));
+  });
+  var stopLine=stop!=null?'<line x1="0" x2="'+W+'" y1="'+y(stop).toFixed(1)+'" y2="'+y(stop).toFixed(1)+'" stroke="var(--stop)" stroke-width="1" stroke-dasharray="3 3"/>':"";
+  var maLine=ma.length>1?'<polyline points="'+ma.join(" ")+'" fill="none" stroke="var(--ma)" stroke-width="1.6" stroke-linejoin="round"/>':"";
+  var label="최근 "+n+"주 주봉 ("+esc(w[0][0])+"~"+esc(w[n-1][0])+")";
+  return '<svg class="spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+label+'">'+stopLine+out.join("")+maLine+'</svg>';
+}
+
+/* ── 카드 ───────────────────────────── */
+function card(it){
+  var s=ST[it.state]||ST["대기"];
+  var vs104=it.vs104_pct!=null?it.vs104_pct:(it.ma104?(it.close/it.ma104-1)*100:null);
+  var badges=[];
+  if(it.stop_pct!=null&&it.stop_pct<-20)badges.push('<span class="badge b-warn">⚠ 손절선 '+pct(it.stop_pct)+' · 20%보다 멂</span>');
+  if(it.flag)badges.push('<span class="badge b-flag">⚠ '+esc(it.flag)+' · 공시 확인</span>');
+  var target=it.target!=null?won(it.target)
+    :(it.state==="중단"?"—":'<span class="num">'+won(Math.round(it.close*1.12))+'</span><i>예상</i>');
+  var stopLbl=it.state==="중단"?"이탈한 선":"손절선";
+  var mkt=it.market==="KS"?"코스피":"코스닥";
+  var tv="https://www.tradingview.com/chart/?symbol=KRX%3A"+encodeURIComponent(it.code)+"&interval=W";
+  var nv="https://finance.naver.com/item/main.naver?code="+encodeURIComponent(it.code);
+  return '<article class="card s-'+s.cls+'">'
+   +'<div class="card-top"><div><div class="nm">'+esc(it.name)+'<span class="code tnum">'+esc(it.code)+'</span></div>'
+   +'<div class="sub">'+mkt+' · 조건주 '+esc(it.cond_week||"—")+' · 이번 주 '+esc(it.bar)+'</div>'
+   +(badges.length?'<div class="badges">'+badges.join("")+'</div>':"")+'</div>'
+   +'<div class="px"><b class="num">'+won(it.close)+'</b><div class="sub">종가</div></div></div>'
+   +'<div class="grid">'
+   +'<div class="kv"><span>104주선 대비</span><b class="num">'+pct(vs104,true)+'</b></div>'
+   +'<div class="kv"><span>목표가 +12%</span><b class="num">'+target+'</b></div>'
+   +'<div class="kv"><span>'+stopLbl+'</span><b class="num">'+won(it.stop)+'</b><i class="num">'+(it.stop_pct!=null?pct(it.stop_pct,true):"")+'</i></div>'
+   +'</div>'
+   +candles(it.weekly||[],it.stop)
+   +'<div class="legend"><span><i style="background:var(--ma)"></i>104주선 '+won(it.ma104)+'</span>'
+   +'<span><i style="background:var(--stop)"></i>손절선</span>'
+   +'<span class="num">26주 '+won(it.ma26)+' · 52주 '+won(it.ma52)+'</span></div>'
+   +'<div class="todo">'+(it.state==="매수"?"▶ ":"")+s.todo+'</div>'
+   +'<div class="links"><a href="'+nv+'" target="_blank" rel="noopener">네이버증권</a><a href="'+tv+'" target="_blank" rel="noopener">TradingView 주봉</a></div>'
+   +'</article>';
+}
+
+/* ── 섹션들 ─────────────────────────── */
+function sectionStates(d){
+  var html="";
+  ORDER.forEach(function(st){
+    var list=d.items.filter(function(x){return x.state===st}), s=ST[st];
+    html+='<h2 id="st-'+s.cls+'">'+s.label+' <span class="cnt">'+list.length+'건</span></h2>';
+    if(list.length){html+=list.map(card).join("");return}
+    if(st==="매수")html+='<div class="empty"><b>이번 주 매수 대상 없음 — 정상입니다.</b><br>신호는 전 종목 기준 주당 평균 1.7건이고, 몇 주 연속 0건도 흔합니다.</div>';
+    else html+='<div class="empty">없음</div>';
+  });
+  return html;
+}
+
+function sectionDiff(df){
+  var h='<h2>지난 주 대비</h2><div class="box">';
+  if(!df||!df.base){return h+'<p class="sub" style="margin:0">비교할 지난 주 기록이 아직 없습니다. 다음 주 스캔부터 표시됩니다.</p></div>'}
+  var rows=[];
+  (df.new||[]).forEach(function(x){rows.push('<div class="diff-row"><span class="sg sg-new">+</span><span>'+esc(x.name)+' <span class="sub tnum">'+esc(x.code)+'</span> → <b>'+esc(ST[x.state]?ST[x.state].label:x.state)+'</b></span></div>')});
+  (df.changed||[]).forEach(function(x){rows.push('<div class="diff-row"><span class="sg sg-chg">~</span><span>'+esc(x.name)+' <span class="sub tnum">'+esc(x.code)+'</span> '+esc(ST[x.before]?ST[x.before].label:x.before)+' → <b>'+esc(ST[x.state]?ST[x.state].label:x.state)+'</b></span></div>')});
+  (df.dropped||[]).forEach(function(x){rows.push('<div class="diff-row"><span class="sg sg-out">−</span><span>'+esc(x.name)+' <span class="sub tnum">'+esc(x.code)+'</span> 빠짐 <span class="sub">(전 상태 '+esc(ST[x.state]?ST[x.state].label:x.state)+')</span></span></div>')});
+  h+='<p class="sub">기준: '+esc(df.base)+' 스캔</p>';
+  h+=rows.length?rows.join(""):'<p style="margin:0">변화 없음</p>';
+  return h+'</div>';
+}
+
+function sectionCheck(key){
+  var items=[
+    ["관리종목 · 투자주의환기 · 투자경고","네이버증권 종목명 옆 표시, KRX KIND 시장조치"],
+    ["감사의견 비적정 · 자본잠식","최근 사업보고서 감사의견, 자본총계"],
+    ["최근 유상증자 · 감자 · 액면분할/병합","DART 주요사항보고서 · '자본변동?' 표시 종목은 필수"],
+    ["급등 사유","뉴스·공시로 테마성 급등인지 확인"]
+  ];
+  var saved={}; try{saved=JSON.parse(store(key)||"{}")||{}}catch(e){saved={}}
+  return '<h2>매수 전 체크리스트</h2><div class="box check" id="checklist">'
+    +items.map(function(x,i){return '<label><input type="checkbox" data-i="'+i+'"'+(saved[i]?" checked":"")+'><span>'+x[0]+'<small>'+x[1]+'</small></span></label>'}).join("")
+    +'</div><p class="note">자동 판정 불가 항목입니다. 체크 상태는 이 기기에만, 이번 스캔일 기준으로 저장됩니다.</p>';
+}
+
+function sectionRules(){
+  return '<h2>운용 규칙</h2><div class="box"><table class="rules">'
+   +'<tr><th>진입</th><td>주봉 4조건(26/52/104주) 충족 후 <b>첫 음봉, 금요일 종가</b> 매수</td></tr>'
+   +'<tr><th>익절</th><td><b>+12% 전량</b> — 매수 직후 지정가 예약매도</td></tr>'
+   +'<tr><th>손절</th><td>직전 양봉 묶음 저가를 <b>금요일 종가로</b> 이탈하면 청산 (장중 무시)</td></tr>'
+   +'<tr><th>비중</th><td>종목당 5% (150만 원), 동시 최대 8종목 · 운용금 3,000만 원</td></tr>'
+   +'<tr><th>금지</th><td>+12% 이후 "더 갈 것 같아서" 보유 연장</td></tr>'
+   +'</table><p class="note">검증(2005~2026, 약 1,760건): +12% 전량 익절이 CAGR·MDD·샤프 모두 우위. 진입 신호 자체는 랜덤 대비 우위가 확인되지 않았고, 성과는 청산 규칙을 지키는 데서 나온다.</p></div>';
+}
+
+function sectionTrack(tr){
+  var h='<h2>신호 성적표 <span class="cnt">주봉 신호 트랙 · 종목당 150만 원</span></h2>';
+  if(!tr||!tr.length)return h+'<div class="empty">아직 기록이 없습니다.</div>';
+  var closed=tr.filter(function(t){return t.exit_date}), win=closed.filter(function(t){return (t.pnl||0)>0}).length;
+  var lose=closed.length-win, open=tr.length-closed.length;
+  var pnl=closed.reduce(function(a,t){return a+(t.pnl||0)},0);
+  var inv=closed.reduce(function(a,t){return a+(t.invest||0)},0);
+  h+='<div class="score">'
+   +'<div class="kv"><span>승 / 패</span><b class="num">'+win+' / '+lose+'</b>'+(open?'<i>보유 '+open+'</i>':"")+'</div>'
+   +'<div class="kv"><span>승률</span><b class="num">'+(closed.length?Math.round(win/closed.length*100)+"%":"—")+'</b></div>'
+   +'<div class="kv"><span>누적 손익</span><b class="num '+(pnl>=0?"pos":"neg")+'">'+(pnl>0?"+":"")+won(pnl)+'</b><i class="num">'+(inv?pct(pnl/inv*100,true):"")+'</i></div>'
+   +'</div>';
+  h+='<div class="tbl-wrap"><table class="trk"><thead><tr><th>종목</th><th>매수일</th><th>매수가</th><th>청산</th><th>사유</th><th>수익률</th><th>손익</th></tr></thead><tbody>'
+   +tr.map(function(t){
+      var cls=t.pnl==null?"":(t.pnl>=0?"pos":"neg");
+      return '<tr><td>'+esc(t.name)+'</td><td class="tnum">'+esc((t.buy_date||"").slice(5))+'</td><td class="tnum">'+won(t.buy_price)+'</td>'
+       +'<td class="tnum">'+(t.exit_date?esc(t.exit_date.slice(5))+' · '+won(t.exit_price):"보유 중")+'</td><td>'+esc(t.reason||"—")+'</td>'
+       +'<td class="tnum '+cls+'">'+(t.ret_pct!=null?pct(t.ret_pct,true):"—")+'</td><td class="tnum '+cls+'">'+(t.pnl!=null?(t.pnl>0?"+":"")+won(t.pnl):"—")+'</td></tr>';
+    }).join("")+'</tbody></table></div><p class="note">trade_log.csv 의 「주봉 신호」 트랙만 집계. 손익은 수수료·세금 제외.</p>';
+  return h;
+}
+
+/* ── 렌더 ───────────────────────────── */
+function render(d){
+  var c=d.counts||{}, ltd=d.last_trading_day;
+  var head='';
+  if(d.demo)head+='<div class="banner"><b>샘플 데이터</b> — 오프라인 합성 데이터로 만든 화면 확인용입니다. 실제 종목이 아닙니다. 첫 Actions 실행 후 실데이터로 바뀝니다.</div>';
+  head+='<div class="meta"><span>스캔 <b class="tnum" style="color:var(--text)">'+esc(d.scan_date)+'</b></span>'
+    +(d.bar_final?'<span class="badge b-final">금요일 확정</span>':'<span class="badge b-draft">주중 미확정</span>')
+    +'<span class="tnum">전 종목 '+won(d.universe)+'</span>'
+    +(ltd?'<span>이번 주 마지막 거래일 '+md(ltd)+'</span>':"")
+    +((d.excluded||d.failed)?'<span class="tnum">정지의심 '+won(d.excluded)+(d.failed?' · 수집실패 '+won(d.failed):"")+' 제외</span>':"")
+    +'</div>';
+  if(!d.bar_final)head+='<div class="banner">이번 주 주봉이 아직 끝나지 않았습니다. 금요일(마지막 거래일) 장 마감 전 값이라 상태가 바뀔 수 있습니다.</div>';
+  if(ltd&&new Date(ltd+"T00:00:00").getDay()!==5)head+='<div class="banner">이번 주는 금요일이 휴장입니다. '+md(ltd)+' 종가가 이번 주 주봉 종가입니다.</div>';
+  head+='<nav class="chips" aria-label="상태 요약">'+ORDER.map(function(st){
+    var s=ST[st], n=c[st]||0;
+    return '<a class="chip c-'+s.cls+(n?"":" zero")+'" href="#st-'+s.cls+'"><b class="num">'+n+'</b><span>'+s.label+'</span></a>';
+  }).join("")+'</nav>';
+
+  var ckKey="bdg-check-"+d.scan_date;
+  document.getElementById("app").innerHTML=head+sectionStates(d)+sectionDiff(d.diff)+sectionCheck(ckKey)+sectionRules()+sectionTrack(d.track);
+  var box=document.getElementById("checklist");
+  box&&box.addEventListener("change",function(){
+    var o={}; box.querySelectorAll("input").forEach(function(x){if(x.checked)o[x.getAttribute("data-i")]=1});
+    store(ckKey,JSON.stringify(o));
+  });
+}
+
+fetch("data/latest.json",{cache:"no-store"})
+  .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+  .then(render)
+  .catch(function(e){
+    document.getElementById("app").innerHTML='<div class="err">데이터를 불러오지 못했습니다 ('+esc(e.message)+').<br>'
+      +'로컬에서 파일을 직접 열었다면 <code>python -m http.server -d docs</code> 로 띄워 주세요.</div>';
+  });
+})();
+</script>
+</body>
+</html>
