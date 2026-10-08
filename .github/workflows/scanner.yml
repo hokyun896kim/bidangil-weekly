@@ -47,8 +47,12 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scan_bot.py
 
-      # 웹 매매판 데이터 — docs/data/latest.json + history/YYYY-MM-DD.json
-      - name: 사이트 데이터 생성
+      # 웹 매매판 데이터 — latest.json · history · weeks.json
+      # + 가상계좌 진행(ledger_state.json → ledger.json), 체결이 있으면 텔레그램으로 따로 알림
+      - name: 사이트 데이터 + 가상계좌
+        env:
+          TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python build_site.py --top "$SCAN_TOP"
 
       - name: 상태·로그·사이트 커밋

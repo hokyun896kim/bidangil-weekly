@@ -126,7 +126,51 @@ table.trk{border-collapse:collapse;width:100%;min-width:480px;font-size:13px}
 .trk tr:last-child td{border-bottom:0}
 footer{margin-top:28px;font-size:12px;color:var(--faint);line-height:1.6}
 .err{padding:20px;border-radius:12px;background:var(--warn-bg);color:var(--warn)}
+/* 탭 */
+.tabs{display:flex;gap:4px;background:var(--surface-2);border-radius:12px;padding:4px;margin:0 0 14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:8px 6px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.tabs button:focus-visible,.theme-btn:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 가상계좌 */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+.tile span{display:block;font-size:11px;color:var(--muted)}
+.tile b{display:block;font-size:18px;line-height:1.25;margin-top:2px}
+.tile i{font-style:normal;font-size:12px;color:var(--muted)}
+.chart{display:block;width:100%;height:auto}
+.chart text{font-size:10px;fill:var(--muted);font-family:inherit}
+.pos-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.pos-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.pos-head .r{text-align:right;flex:none}
+.pos-head .r b{font-size:17px}
+.rng{position:relative;height:30px;margin:12px 4px 2px}
+.rng .bar{position:absolute;left:0;right:0;top:12px;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--down) 0%,var(--surface-2) 45%,var(--surface-2) 55%,var(--up) 100%);opacity:.55}
+.rng .tick{position:absolute;top:8px;width:2px;height:14px;background:var(--muted)}
+.rng .dot{position:absolute;top:8px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--text);border:2px solid var(--surface)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.ev{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ev:last-child{border-bottom:0}
+.ev .d{flex:none;width:58px;color:var(--muted);font-size:12px}
+.ev .t{flex:none;font-weight:700;min-width:52px}
+.ev .t.buy{color:var(--buy)} .ev .t.win{color:var(--new)} .ev .t.loss{color:var(--down)} .ev .t.skip{color:var(--faint)}
+.ev .m{min-width:0}
+.cmp{width:100%;border-collapse:collapse;font-size:13px}
+.cmp th,.cmp td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right}
+.cmp th:first-child,.cmp td:first-child{text-align:left;color:var(--muted);font-weight:500}
+.cmp thead th{font-size:12px;color:var(--muted);font-weight:600}
+.cmp tr:last-child td{border-bottom:0}
+.wk{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.wk-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:14px}
+.wk-cnt{display:flex;gap:8px;font-size:12px}
+.wk-cnt b{font-weight:700}
+.wk-names{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.pill{font-size:12px;border-radius:999px;padding:1px 8px;background:var(--surface-2);color:var(--text)}
+.pill.buy{background:var(--buy-bg);color:var(--buy)} .pill.wait{background:var(--wait-bg);color:var(--wait)}
+.pill.new{background:var(--new-bg);color:var(--new)} .pill.halt{background:var(--halt-bg);color:var(--halt)}
+.mini{display:flex;justify-content:space-between;align-items:center;gap:10px;text-decoration:none}
+.mini .go{font-size:13px;color:var(--accent);font-weight:600;flex:none}
 @media (max-width:380px){
+  .tiles{grid-template-columns:repeat(2,1fr)}
   .grid{grid-template-columns:repeat(2,1fr)}
   .chip b{font-size:19px}
 }
@@ -138,10 +182,18 @@ footer{margin-top:28px;font-size:12px;color:var(--faint);line-height:1.6}
     <h1>비단길 주봉 매매판<small>한주에한번매매 · 이번 주 매매 예정 종목군</small></h1>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="테마 전환">테마: 자동</button>
   </header>
+  <nav class="tabs" role="tablist" aria-label="화면">
+    <button type="button" role="tab" id="tab-week" data-tab="week" aria-selected="true">이번 주</button>
+    <button type="button" role="tab" id="tab-acct" data-tab="acct" aria-selected="false">가상계좌</button>
+    <button type="button" role="tab" id="tab-log" data-tab="log" aria-selected="false">기록</button>
+  </nav>
   <main id="app"><p class="sub">불러오는 중…</p></main>
+  <section id="acct" hidden></section>
+  <section id="log" hidden></section>
   <footer>
     판정은 scanner.py 의 4조건 그대로이며 이 페이지는 규칙 실행용 표입니다. 투자 권유가 아닙니다.<br>
-    데이터: Yahoo Finance 주봉 · 종목 목록 FinanceDataReader(KRX) · 매주 금요일 16:30 KST 자동 갱신
+    데이터: Yahoo Finance 주봉 · 종목 목록 FinanceDataReader(KRX) · 매주 금요일 16:30 KST 자동 갱신<br>
+    가상계좌는 실제 주문이 아니라 규칙을 기계적으로 실행한 모의 기록입니다.
   </footer>
 </div>
 <script>
@@ -301,8 +353,134 @@ function sectionTrack(tr){
   return h;
 }
 
+/* ── 가상계좌 ───────────────────────── */
+function man(n){return n==null?"—":(Math.round(n/1000)/10).toLocaleString("ko-KR",{minimumFractionDigits:1,maximumFractionDigits:1})+"만"}
+function sgn(n){return n>0?"pos":(n<0?"neg":"")}
+function wonS(n){return n==null?"—":(n>0?"+":"")+won(Math.round(n))}
+
+function equityChart(eq){
+  var W=340,H=170,L=34,R=10,T=10,B=22,n=eq.length;
+  if(n<2)return '<p class="sub">자산 곡선은 2주 이상 쌓이면 그려집니다.</p>';
+  var start=eq[0].equity, ser=[
+    {k:"계좌",col:"var(--accent)",w:2.2,v:eq.map(function(r){return (r.equity/start-1)*100})},
+    {k:"KOSPI",col:"var(--muted)",w:1.2,dash:"",v:eq.map(function(r){return r.KOSPI})},
+    {k:"KOSDAQ",col:"var(--faint)",w:1.2,dash:"4 3",v:eq.map(function(r){return r.KOSDAQ})}
+  ].filter(function(s){return s.v.some(function(x){return x!=null})});
+  var lo=0,hi=0; ser.forEach(function(s){s.v.forEach(function(x){if(x!=null){lo=Math.min(lo,x);hi=Math.max(hi,x)}})});
+  var pad=Math.max(1,(hi-lo)*0.08); lo-=pad; hi+=pad;
+  var x=function(i){return L+(W-L-R)*i/(n-1)}, y=function(v){return T+(hi-v)/(hi-lo)*(H-T-B)};
+  var step=(hi-lo)>20?10:((hi-lo)>8?5:((hi-lo)>4?2:1)), g=[];
+  for(var v=Math.ceil(lo/step)*step;v<=hi;v+=step){
+    g.push('<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v).toFixed(1)+'" y2="'+y(v).toFixed(1)+'" stroke="var(--line)" stroke-width="'+(v===0?1.2:0.6)+'"/>');
+    g.push('<text x="'+(L-4)+'" y="'+(y(v)+3).toFixed(1)+'" text-anchor="end">'+(v>0?"+":"")+v+'%</text>');
+  }
+  var lab=[0,Math.floor((n-1)/2),n-1].filter(function(v,i,a){return a.indexOf(v)===i});
+  lab.forEach(function(i){var d=eq[i].date||eq[i].week;g.push('<text x="'+x(i).toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+(i===0?"start":(i===n-1?"end":"middle"))+'">'+esc(d.slice(5).replace("-","/"))+'</text>')});
+  var lines=ser.map(function(s){
+    var pts=[];s.v.forEach(function(v,i){if(v!=null)pts.push(x(i).toFixed(1)+","+y(v).toFixed(1))});
+    var last=s.v[n-1];
+    return '<polyline points="'+pts.join(" ")+'" fill="none" stroke="'+s.col+'" stroke-width="'+s.w+'"'+(s.dash?' stroke-dasharray="'+s.dash+'"':'')+' stroke-linejoin="round" stroke-linecap="round"/>'
+      +(last!=null?'<circle cx="'+x(n-1).toFixed(1)+'" cy="'+y(last).toFixed(1)+'" r="'+(s.k==="계좌"?3.2:2.2)+'" fill="'+s.col+'"/>':"");
+  }).join("");
+  var leg=ser.map(function(s){var v=s.v[n-1];return '<span><i style="background:'+s.col+'"></i>'+s.k+' <b class="num '+sgn(v)+'">'+(v==null?"—":pct(v,true))+'</b></span>'}).join("");
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="주간 자산 곡선, 시작 대비 수익률">'+g.join("")+lines+'</svg><div class="legend">'+leg+'</div>';
+}
+
+function rangeBar(p){
+  var lo=p.stop, hi=p.target, cur=p.last_close, en=p.entry_price;
+  if(cur==null||hi<=lo)return "";
+  var f=function(v){return Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100))};
+  return '<div class="rng" aria-hidden="true"><div class="bar"></div><div class="tick" style="left:'+f(en).toFixed(1)+'%"></div><div class="dot" style="left:'+f(cur).toFixed(1)+'%"></div></div>'
+    +'<div class="rng-lbl"><span class="num">손절 '+won(Math.round(lo))+' ('+pct(p.to_stop_pct,true)+')</span><span class="num">목표 '+won(Math.round(hi))+' ('+pct(p.to_target_pct,true)+')</span></div>';
+}
+
+function posCard(p){
+  var mkt=p.sym&&p.sym.slice(-2)==="KS"?"코스피":"코스닥";
+  var cls=sgn(p.unreal_pct), amt=p.qty*(p.last_close||p.entry_price)-p.qty*p.entry_price;
+  return '<article class="pos-card"><div class="pos-head"><div><div class="nm">'+esc(p.name)+'<span class="code tnum">'+esc(p.code)+'</span></div>'
+    +'<div class="sub">'+mkt+' · '+esc((p.entry_date||"").slice(5).replace("-","/"))+' 매수 '+won(Math.round(p.entry_price))+' × '+won(p.qty)+'주 · '+(p.weeks||0)+'주째</div></div>'
+    +'<div class="r"><b class="num '+cls+'">'+pct(p.unreal_pct,true)+'</b><div class="sub num">'+won(Math.round(p.last_close))+' · '+wonS(amt)+'</div></div></div>'
+    +rangeBar(p)
+    +(p.stop_pct<-20?'<div class="badges"><span class="badge b-warn">⚠ 진입 시 손절선 '+pct(p.stop_pct)+'</span></div>':"")
+    +'</article>';
+}
+
+function evRow(e){
+  var t=e.type, cls=t==="매수"?"buy":(t==="미진입"?"skip":((e.ret_pct||0)>0?"win":"loss"));
+  var body;
+  if(t==="매수")body=esc(e.name)+' <span class="num">'+won(e.price)+' × '+won(e.qty)+'주</span> <span class="sub num">목표 '+won(e.target)+' · 손절 '+won(e.stop)+'</span>';
+  else if(t==="미진입")body=esc(e.name)+' <span class="sub">'+esc(e.note||"")+' — 신호만 추적</span>';
+  else body=esc(e.name)+' <span class="num">'+won(e.price)+'</span> <b class="num '+sgn(e.ret_pct)+'">'+pct(e.ret_pct,true)+'</b>'+(e.taken&&e.pnl!=null?' <span class="sub num">'+wonS(e.pnl)+'</span>':' <span class="sub">(미보유 신호)</span>');
+  return '<div class="ev"><span class="d num">'+esc((e.date||"").slice(5).replace("-","/"))+'</span><span class="t '+cls+'">'+esc(t)+'</span><span class="m">'+body+'</span></div>';
+}
+
+function statCol(s){
+  return [s.n, s.closed?(s.wins+"승 "+s.losses+"패"):"—", s.win_rate!=null?s.win_rate+"%":"—",
+    s.avg_ret!=null?pct(s.avg_ret,true):"—", s.avg_win!=null?pct(s.avg_win,true):"—",
+    s.avg_loss!=null?pct(s.avg_loss,true):"—", s.avg_weeks!=null?s.avg_weeks+"주":"—"];
+}
+
+function renderAcct(L){
+  var el=document.getElementById("acct");
+  if(!L){el.innerHTML='<div class="empty"><b>가상계좌 기록이 아직 없습니다.</b><br>첫 전 종목 스캔(Actions, top=0)이 끝나면 8월 첫 주부터 거슬러 올라가 자동으로 채워집니다.</div>';return}
+  var st=L.stats||{}, e=st.equity||{}, a=st.account||{}, c=L.config||{};
+  var h='<div class="meta"><span>기준 <b class="tnum" style="color:var(--text)">'+esc(L.last_week?md((L.equity[L.equity.length-1]||{}).date||L.last_week):"—")+'</b> 마감</span>'
+    +'<span class="tnum">시작 '+esc(c.start_week||"")+' · '+won(c.capital)+'원</span></div>';
+  h+='<div class="tiles">'
+    +'<div class="tile"><span>평가액</span><b class="num" title="'+won(e.now)+'원">'+man(e.now)+'</b><i class="num '+sgn(e.ret_pct)+'">'+pct(e.ret_pct,true)+'</i></div>'
+    +'<div class="tile"><span>최대 낙폭</span><b class="num neg">'+pct(e.mdd_pct)+'</b><i>'+(e.weeks||0)+'주 운용</i></div>'
+    +'<div class="tile"><span>청산 성적</span><b class="num">'+(a.closed?a.wins+"승 "+a.losses+"패":"—")+'</b><i class="num">'+(a.win_rate!=null?"승률 "+a.win_rate+"%":"")+(a.open?" · 보유 "+a.open:"")+'</i></div>'
+    +'</div>';
+  h+='<h2>자산 곡선 <span class="cnt">시작 대비 · 지수와 비교</span></h2><div class="box">'+equityChart(L.equity||[])+'</div>';
+  var op=L.open_positions||[];
+  h+='<h2>보유 종목 <span class="cnt">'+op.length+' / '+(c.slots||8)+'</span></h2>';
+  h+=op.length?op.map(posCard).join(""):'<div class="empty">보유 종목 없음 — 전액 현금입니다.</div>';
+  var ev=(L.events||[]).slice().reverse().slice(0,20);
+  h+='<h2>체결 기록 <span class="cnt">최근 '+ev.length+'건</span></h2><div class="box">'+(ev.length?ev.map(evRow).join(""):'<p class="sub" style="margin:0">아직 체결이 없습니다.</p>')+'</div>';
+  var all=st.all_signals||{}, rows=["신호 수","청산","승률","평균 수익","평균 익절","평균 손절","평균 보유"], A=statCol(a), S=statCol(all);
+  h+='<h2>계좌 vs 신호 전체</h2><div class="box"><table class="cmp"><thead><tr><th></th><th>계좌</th><th>신호 전체</th></tr></thead><tbody>'
+    +rows.map(function(r,i){return '<tr><td>'+r+'</td><td class="num">'+A[i]+'</td><td class="num">'+S[i]+'</td></tr>'}).join("")
+    +'</tbody></table><p class="note">신호 전체에는 슬롯이 차서 계좌가 사지 못한 신호도 같은 규칙으로 추적해 포함합니다. 수익률은 왕복 비용 '+(c.cost_pct||0.3)+'% 차감 후.</p></div>';
+  h+='<p class="note">규칙: 매수 시점 평가액의 '+Math.round((c.weight||0.05)*100)+'%, 동시 '+(c.slots||8)+'종목, +'+(c.target_pct||12)+'% 예약매도(갭 상승은 시가), 손절선 고정·주봉 종가 이탈 시 청산, 같은 주 겹치면 익절 우선.'
+    +(c.max_stop_pct?' 손절선이 '+c.max_stop_pct+'%보다 먼 신호는 매수하지 않음.':' 손절선 거리 제한 없음.')+'</p>';
+  el.innerHTML=h;
+}
+
+function miniAcct(L){
+  if(!L||!L.stats||!L.stats.equity)return "";
+  var e=L.stats.equity, a=L.stats.account, op=(L.open_positions||[]).length;
+  return '<h2>가상계좌</h2><a class="box mini" href="#acct" data-goto="acct"><span>평가 <b class="num">'+won(e.now)+'</b> <b class="num '+sgn(e.ret_pct)+'">'+pct(e.ret_pct,true)+'</b><br><span class="sub">보유 '+op+'종목 · '+(a.closed?a.wins+"승 "+a.losses+"패":"청산 없음")+' · MDD '+pct(e.mdd_pct)+'</span></span><span class="go">자세히 →</span></a>';
+}
+
+/* ── 기록 ───────────────────────────── */
+function renderLog(W){
+  var el=document.getElementById("log");
+  if(!W||!W.length){el.innerHTML='<div class="empty"><b>주간 기록이 아직 없습니다.</b><br>금요일 확정 스캔이 돌 때마다 한 줄씩 쌓입니다.</div>';return}
+  el.innerHTML='<p class="sub">확정된 주간 스캔 '+W.length+'회</p>'+W.map(function(w){
+    var c=w.counts||{};
+    var cnt=ORDER.map(function(st){var s=ST[st];return '<span class="c-'+s.cls+'"><b class="num" style="color:var(--'+s.cls+')">'+(c[st]||0)+'</b> '+s.label+'</span>'}).join("");
+    var names=(w.items||[]).map(function(x){var s=ST[x.state]||{cls:""};return '<span class="pill '+s.cls+'">'+esc(x.name)+'</span>'}).join("");
+    return '<div class="wk"><div class="wk-top"><b>'+esc(md(w.last_trading_day||w.scan_date))+' 마감</b><span class="wk-cnt">'+cnt+'</span></div>'+(names?'<div class="wk-names">'+names+'</div>':'')+'</div>';
+  }).join("");
+}
+
+/* ── 탭 ─────────────────────────────── */
+var TABS={week:"app",acct:"acct",log:"log"};
+function showTab(t){
+  if(!TABS[t])t="week";
+  Object.keys(TABS).forEach(function(k){
+    document.getElementById(TABS[k]).hidden=(k!==t);
+    document.getElementById("tab-"+k).setAttribute("aria-selected",k===t?"true":"false");
+  });
+  try{history.replaceState(null,"",t==="week"?location.pathname:"#"+t)}catch(e){}
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",function(){showTab((location.hash||"").replace("#","")||"week")});
+document.querySelector(".tabs").addEventListener("click",function(ev){var b=ev.target.closest("button[data-tab]");if(b)showTab(b.getAttribute("data-tab"))});
+document.addEventListener("click",function(ev){var a=ev.target.closest("[data-goto]");if(a){ev.preventDefault();showTab(a.getAttribute("data-goto"))}});
+
 /* ── 렌더 ───────────────────────────── */
-function render(d){
+function render(d,L){
   var c=d.counts||{}, ltd=d.last_trading_day;
   var head='';
   if(d.demo)head+='<div class="banner"><b>샘플 데이터</b> — 오프라인 합성 데이터로 만든 화면 확인용입니다. 실제 종목이 아닙니다. 첫 Actions 실행 후 실데이터로 바뀝니다.</div>';
@@ -320,7 +498,7 @@ function render(d){
   }).join("")+'</nav>';
 
   var ckKey="bdg-check-"+d.scan_date;
-  document.getElementById("app").innerHTML=head+sectionStates(d)+sectionDiff(d.diff)+sectionCheck(ckKey)+sectionRules()+sectionTrack(d.track);
+  document.getElementById("app").innerHTML=head+sectionStates(d)+sectionDiff(d.diff)+miniAcct(L)+sectionCheck(ckKey)+sectionRules();
   var box=document.getElementById("checklist");
   box&&box.addEventListener("change",function(){
     var o={}; box.querySelectorAll("input").forEach(function(x){if(x.checked)o[x.getAttribute("data-i")]=1});
@@ -328,9 +506,15 @@ function render(d){
   });
 }
 
-fetch("data/latest.json",{cache:"no-store"})
-  .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
-  .then(render)
+function getJSON(u,optional){
+  return fetch(u,{cache:"no-store"}).then(function(r){if(!r.ok){if(optional)return null;throw new Error("HTTP "+r.status)}return r.json()})
+    .catch(function(e){if(optional)return null;throw e});
+}
+Promise.all([getJSON("data/latest.json"),getJSON("data/ledger.json",true),getJSON("data/weeks.json",true)])
+  .then(function(r){
+    render(r[0],r[1]); renderAcct(r[1]); renderLog(r[2]);
+    showTab((location.hash||"").replace("#","")||"week");
+  })
   .catch(function(e){
     document.getElementById("app").innerHTML='<div class="err">데이터를 불러오지 못했습니다 ('+esc(e.message)+').<br>'
       +'로컬에서 파일을 직접 열었다면 <code>python -m http.server -d docs</code> 로 띄워 주세요.</div>';
