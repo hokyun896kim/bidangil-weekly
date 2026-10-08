@@ -75,7 +75,7 @@ def _close_asof(df, week):
 
 
 def empty_ledger(cfg=None):
-    cfg = dict(CONFIG, **(cfg or {}))
+    cfg = {**CONFIG, **(cfg or {})}
     return {"version": 1, "config": cfg, "last_week": None,
             "cash": float(cfg["capital"]), "signals": [], "equity": [], "events": []}
 
@@ -85,7 +85,7 @@ def load(path, cfg=None):
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
             led = json.load(f)
-        led["config"] = dict(CONFIG, **led.get("config", {}), **(cfg or {}))
+        led["config"] = {**CONFIG, **led.get("config", {}), **(cfg or {})}
         return led
     return empty_ledger(cfg)
 
