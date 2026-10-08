@@ -1,0 +1,73 @@
+name: 한주에한번매매 스캐너
+
+on:
+  schedule:
+    # 매주 금요일 16:30 KST (07:30 UTC) — 장 마감 후
+    # 금요일이 공휴일이어도 그대로 돈다. 그 주 마지막 거래일 종가가 이미 확정된 상태이고,
+    # build_site.py 가 kr_holidays.py 로 마지막 거래일·확정 여부를 판단한다.
+    - cron: "30 7 * * 5"
+  workflow_dispatch:
+    inputs:
+      top:
+        description: "시총 상위 N (0 = 전 종목)"
+        required: false
+        default: "0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scanner
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SCAN_TOP: ${{ github.event.inputs.top || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 의존성 설치
+        run: |
+          python -m pip install --upgrade pip
+          pip install finance-datareader yfinance pandas numpy requests
+
+      # (기존) 텔레그램 알림 — 실패해도 사이트 갱신은 계속한다
+      - name: 스캔 + 텔레그램 알림
+        id: telegram
+        continue-on-error: true
+        env:
+          TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scan_bot.py
+
+      # 웹 매매판 데이터 — docs/data/latest.json + history/YYYY-MM-DD.json
+      - name: 사이트 데이터 생성
+        run: python build_site.py --top "$SCAN_TOP"
+
+      - name: 상태·로그·사이트 커밋
+        run: |
+          git config user.name  "scanner-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add docs/data
+          git add scan_state.json scan_log.csv 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "변경 없음"; exit 0
+          fi
+          git commit -m "scan $(TZ=Asia/Seoul date +%F)"
+          for i in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
+
+      - name: 텔레그램 단계 실패 표시
+        if: steps.telegram.outcome == 'failure'
+        run: |
+          echo "::warning::텔레그램 알림 단계가 실패했습니다. 사이트는 갱신됐습니다. 로그를 확인하세요."
