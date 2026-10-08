@@ -22,6 +22,7 @@ import pandas as pd
 import scanner
 from scanner import MA_S, MA_M, MA_L, TARGET_PCT, analyse, bull_block_low, data_flag
 from kr_holidays import last_trading_day_of_week
+import ledger
 
 KST       = dt.timezone(dt.timedelta(hours=9))
 ROOT      = os.path.dirname(os.path.abspath(__file__))
@@ -32,6 +33,10 @@ STATES    = ["매수", "대기", "신규조건", "중단"]
 WEEKS     = 20                     # 미니 캔들 주 수
 CLOSE_HHMM = (15, 40)              # 장 마감(15:30) + 여유. 이후면 그 주 주봉 확정
 TRACK_NAME = "주봉 신호"
+LEDGER_STATE = os.path.join(OUT_DIR, "ledger_state.json")   # 엔진 상태 (다음 실행이 이어서 씀)
+LEDGER_VIEW  = os.path.join(OUT_DIR, "ledger.json")         # 화면용 요약
+WEEKS_INDEX  = os.path.join(OUT_DIR, "weeks.json")          # 주간 스캔 기록 목록
+LEDGER_CFG   = os.path.join(ROOT, "ledger_config.json")     # 사용자 설정 (선택)
 
 
 # ────────────────────────── 보조 ──────────────────────────
@@ -186,6 +191,72 @@ def demo_data(n=4000, seed=7):
     return names, data, []
 
 
+# ────────────────────────── 가상계좌 ──────────────────────────
+def fetch_bench():
+    """KOSPI·KOSDAQ 주봉 종가 (자산 곡선 비교용). 실패해도 계속."""
+    try:
+        import yfinance as yf
+        out = {}
+        for k, t in (("KOSPI", "^KS11"), ("KOSDAQ", "^KQ11")):
+            d = yf.download(t, start="2025-01-01", interval="1wk", progress=False, auto_adjust=False)
+            if len(d):
+                c = d["Close"]
+                out[k] = (c.iloc[:, 0] if hasattr(c, "columns") else c).dropna()
+        return out
+    except Exception as e:
+        print(f"      지수 수집 실패: {e}")
+        return {}
+
+
+def run_ledger(data, tick, base_monday, final):
+    """확정된 주까지 가상계좌를 진행하고 화면용 요약을 저장. 새 체결 이벤트 반환."""
+    cfg = None
+    if os.path.exists(LEDGER_CFG):
+        try:
+            cfg = json.load(open(LEDGER_CFG, encoding="utf-8"))
+        except Exception as e:
+            print(f"      ledger_config.json 읽기 실패 — 기본값 사용 ({e})")
+    led = ledger.load(LEDGER_STATE, cfg)
+    upto = pd.Timestamp(base_monday) - (pd.Timedelta(0) if final else pd.Timedelta(days=7))
+    print(f"[가상계좌] {led['last_week'] or '새 장부(' + led['config']['start_week'] + '부터 백필)'} → {upto.date()} 처리", flush=True)
+    weeks, new_events = ledger.advance(led, data, tick, upto)
+    ledger.save(led, LEDGER_STATE)
+    view = ledger.summarize(led, data, fetch_bench())
+    view["generated_at"] = dt.datetime.now(KST).isoformat(timespec="seconds")
+    view["processed_now"] = [w.date().isoformat() for w in weeks]
+    view["new_events"] = new_events
+    ledger.save(view, LEDGER_VIEW)
+    if new_events:
+        ok = ledger.notify(new_events, view, len(led["equity"]))
+        print(f"      체결 {len(new_events)}건" + (" · 텔레그램 전송" if ok else ""))
+    return view
+
+
+def write_weeks_index():
+    """history/*.json 을 훑어 주간 기록 목록을 만든다 (확정 스캔만)."""
+    rows = []
+    if os.path.isdir(HIST_DIR):
+        for fn in sorted(os.listdir(HIST_DIR)):
+            if not fn.endswith(".json"):
+                continue
+            try:
+                h = json.load(open(os.path.join(HIST_DIR, fn), encoding="utf-8"))
+            except Exception:
+                continue
+            if not h.get("bar_final"):
+                continue
+            rows.append({"scan_date": h.get("scan_date"), "base_week": h.get("base_week"),
+                         "last_trading_day": h.get("last_trading_day"), "counts": h.get("counts", {}),
+                         "items": [{"name": x["name"], "code": x["code"], "state": x["state"]}
+                                   for x in h.get("items", [])]})
+    # 같은 주를 여러 번 돌렸으면 마지막 것만
+    by_week = {}
+    for r in rows:
+        by_week[r["base_week"]] = r
+    out = sorted(by_week.values(), key=lambda r: r["base_week"] or "", reverse=True)
+    json.dump(out, open(WEEKS_INDEX, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+
+
 # ────────────────────────── 실행 ──────────────────────────
 def main():
     ap = argparse.ArgumentParser()
@@ -252,6 +323,11 @@ def main():
     dump(os.path.join(OUT_DIR, "latest.json"))
     if not a.demo:
         dump(os.path.join(HIST_DIR, f"{scan_date}.json"))
+        write_weeks_index()
+        if a.top == 0:            # 가상계좌는 전 종목 스캔일 때만 진행 (부분 스캔은 신호 누락)
+            run_ledger(data, tick, base_monday, final)
+        else:
+            print("[가상계좌] --top 지정 실행이라 건너뜀 (전 종목일 때만 진행)")
 
     print(f"      기준 주봉 {out['base_week']} · 확정 {final} · 정지의심 {excl} 배제")
     print("      " + " · ".join(f"{k} {v}" for k, v in out["counts"].items()))

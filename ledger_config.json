@@ -1,0 +1,9 @@
+{
+  "capital": 30000000,
+  "weight": 0.05,
+  "slots": 8,
+  "target_pct": 12.0,
+  "cost_pct": 0.3,
+  "start_week": "2026-08-03",
+  "max_stop_pct": null
+}
