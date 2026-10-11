@@ -23,6 +23,7 @@ import scanner
 from scanner import MA_S, MA_M, MA_L, TARGET_PCT, analyse, bull_block_low, data_flag
 from kr_holidays import last_trading_day_of_week
 import ledger
+import checks
 
 KST       = dt.timezone(dt.timedelta(hours=9))
 ROOT      = os.path.dirname(os.path.abspath(__file__))
@@ -208,7 +209,7 @@ def fetch_bench():
         return {}
 
 
-def run_ledger(data, tick, base_monday, final):
+def run_ledger(data, tick, base_monday, final, blocked=None):
     """확정된 주까지 가상계좌를 진행하고 화면용 요약을 저장. 새 체결 이벤트 반환."""
     cfg = None
     if os.path.exists(LEDGER_CFG):
@@ -219,7 +220,7 @@ def run_ledger(data, tick, base_monday, final):
     led = ledger.load(LEDGER_STATE, cfg)
     upto = pd.Timestamp(base_monday) - (pd.Timedelta(0) if final else pd.Timedelta(days=7))
     print(f"[가상계좌] {led['last_week'] or '새 장부(' + led['config']['start_week'] + '부터 백필)'} → {upto.date()} 처리", flush=True)
-    weeks, new_events = ledger.advance(led, data, tick, upto)
+    weeks, new_events = ledger.advance(led, data, tick, upto, blocked=blocked if final else None)
     ledger.save(led, LEDGER_STATE)
     view = ledger.summarize(led, data, fetch_bench())
     view["generated_at"] = dt.datetime.now(KST).isoformat(timespec="seconds")
@@ -293,6 +294,20 @@ def main():
         if res:
             items.append(build_item(s, tick.get(s, s), df, res))
 
+    # 매수 전 체크 자동 판정 (매수·대기·신규만, 주당 몇 건)
+    blocked = {}
+    if not a.demo:
+        targets = [x for x in items if x["state"] in ("매수", "대기", "신규조건")]
+        if targets:
+            print(f"[체크] {len(targets)}종목 공시·재무·뉴스 확인", flush=True)
+            dm = checks.dept_map()
+            for x in targets:
+                x["check"] = checks.check(x["code"], dm.get(x["code"], ""), x["weekly"])
+                if x["check"]["verdict"] == "제외":
+                    sym = x["code"] + "." + x["market"]
+                    blocked[sym] = ", ".join(r["text"] for r in x["check"]["reasons"] if r["level"] == "제외")
+                print(f"      {x['name']}: {x['check']['verdict']}", flush=True)
+
     order = {s: i for i, s in enumerate(STATES)}
     items.sort(key=lambda x: (order.get(x["state"], 9), x["name"]))
 
@@ -325,7 +340,7 @@ def main():
         dump(os.path.join(HIST_DIR, f"{scan_date}.json"))
         write_weeks_index()
         if a.top == 0:            # 가상계좌는 전 종목 스캔일 때만 진행 (부분 스캔은 신호 누락)
-            run_ledger(data, tick, base_monday, final)
+            run_ledger(data, tick, base_monday, final, blocked)
         else:
             print("[가상계좌] --top 지정 실행이라 건너뜀 (전 종목일 때만 진행)")
 

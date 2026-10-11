@@ -15,6 +15,7 @@
   우선  같은 주에 익절 터치와 손절 종가가 겹치면 익절 (예약매도가 먼저 체결)
   비중  매수 시점 계좌평가액의 5%, 동시 최대 8종목. 같은 종목 중복 보유 없음
   비용  왕복 0.3% (청산 시 일괄 차감)
+  체크  checks.py 자동 판정이 '제외'인 종목은 계좌가 사지 않음 (판정 가능한 최신 주에만 적용, 신호는 추적)
   옵션  max_stop_pct — 손절선이 너무 먼 신호는 계좌가 건너뜀 (기본 꺼짐, 사용자 결정 사항)
 
 신호 전수 기록
@@ -128,7 +129,7 @@ def _close_signal(led, sig, week, px, why):
                           "ret_pct": sig["ret_pct"], "pnl": sig.get("pnl"), "taken": sig["taken"]})
 
 
-def process_week(led, data, names, week, log=print):
+def process_week(led, data, names, week, log=print, blocked=None):
     cfg = led["config"]
     wk_iso = week.date().isoformat()
 
@@ -184,7 +185,10 @@ def process_week(led, data, names, week, log=print):
                "stop": stop, "stop_pct": round((stop / px - 1) * 100, 1),
                "flag": res.get("확인", ""), "taken": False, "qty": 0, "skip": None}
         msp = cfg.get("max_stop_pct")
-        if msp and sig["stop_pct"] < -abs(msp):
+        blk = (blocked or {}).get(sym)
+        if blk:
+            sig["skip"] = "체크 제외: " + blk
+        elif msp and sig["stop_pct"] < -abs(msp):
             sig["skip"] = f"손절선 {sig['stop_pct']:.0f}% (기준 -{abs(msp):.0f}%)"
         elif len(held) >= cfg["slots"]:
             sig["skip"] = "슬롯 부족"
@@ -215,7 +219,7 @@ def process_week(led, data, names, week, log=print):
     log(f"      {wk_iso} 신호 {len(new)} · 보유 {len(pos)} · 평가 {led['equity'][-1]['equity']:,}")
 
 
-def advance(led, data, names, upto_week, log=print):
+def advance(led, data, names, upto_week, log=print, blocked=None):
     """last_week 다음 주부터 upto_week(확정된 주)까지 처리. 처리한 주 목록 반환."""
     upto = _monday(upto_week)
     if led["last_week"]:
@@ -228,7 +232,7 @@ def advance(led, data, names, upto_week, log=print):
         weeks = weeks[-MAX_CATCHUP:]
     before = len(led["events"])
     for w in weeks:
-        process_week(led, data, names, w, log)
+        process_week(led, data, names, w, log, blocked if w == upto else None)
     return weeks, led["events"][before:]
 
 

@@ -191,6 +191,23 @@ footer{margin:20px 4px 0;font-size:12px;color:var(--faint);line-height:1.7}
 .mini{display:flex;justify-content:space-between;align-items:center;gap:10px;text-decoration:none}
 .mini .go{font-size:14px;color:var(--blue);font-weight:600;flex:none}
 .mini .big{font-size:24px;font-weight:700;letter-spacing:-.02em}
+/* 자동 체크 */
+.ck{margin-top:14px;border-radius:16px;background:var(--fill-2);padding:14px 16px}
+.ck-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ck-h b{font-size:15px}
+.ck-v{font-size:13px;font-weight:700;border-radius:8px;padding:3px 10px}
+.ck-v.v-pass{background:var(--new-bg);color:var(--new)} .ck-v.v-warn{background:var(--wait-bg);color:var(--wait)}
+.ck-v.v-out{background:var(--buy);color:#fff} .ck-v.v-unk{background:var(--fill);color:var(--muted)}
+.ck ul{list-style:none;margin:10px 0 0;padding:0}
+.ck li{display:flex;gap:8px;align-items:baseline;font-size:14px;padding:4px 0;color:var(--text-2)}
+.ck li .lv{flex:none;font-size:12px;font-weight:700;width:30px}
+.ck li .lv.out{color:var(--buy)} .ck li .lv.warn{color:var(--wait)}
+.ck li .dt{flex:none;margin-left:auto;font-size:12px;color:var(--faint)}
+.ck .ok{font-size:14px;color:var(--muted);margin:8px 0 0}
+.ck .nw{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.ck .nw a{display:block;font-size:13px;color:var(--text-2);text-decoration:none;padding:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck .nw a span{color:var(--faint);margin-right:6px}
+.s-out .todo{--st-bg:var(--fill);--st:var(--muted)}
 @media (max-width:360px){
   .chip b{font-size:22px}
   .hero-v{font-size:26px}
@@ -276,6 +293,19 @@ function candles(w,stop){
   return '<svg class="spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+label+'">'+stopLine+out.join("")+maLine+'</svg>';
 }
 
+/* ── 자동 체크 블록 ─────────────────── */
+var CKV={"통과":"v-pass","주의":"v-warn","제외":"v-out","미확인":"v-unk"};
+function checkBlock(ck){
+  if(!ck)return "";
+  var rs=(ck.reasons||[]).map(function(r){
+    var lv=r.level==="제외"?"out":"warn";
+    return '<li><span class="lv '+lv+'">'+esc(r.level)+'</span><span>'+esc(r.text)+'</span>'+(r.date?'<span class="dt num">'+esc(r.date)+'</span>':'')+'</li>';
+  }).join("");
+  var body=rs?'<ul>'+rs+'</ul>':'<p class="ok">관리·경고·거래정지, 감사의견·자본잠식, 증자·감자·분할 공시 모두 없어요.</p>';
+  var nw=(ck.news||[]).length?'<div class="nw">'+ck.news.map(function(n){return '<a href="'+esc(n.url)+'" target="_blank" rel="noopener"><span class="num">'+esc(n.date)+'</span>'+esc(n.title)+'</a>'}).join("")+'</div>':"";
+  return '<div class="ck"><div class="ck-h"><b>매수 전 자동 체크</b><span class="ck-v '+(CKV[ck.verdict]||"v-unk")+'">'+esc(ck.verdict)+'</span></div>'+body+nw+'</div>';
+}
+
 /* ── 종목 카드 ───────────────────────── */
 function card(it){
   var s=ST[it.state]||ST["대기"];
@@ -288,7 +318,8 @@ function card(it){
   var mkt=it.market==="KS"?"코스피":"코스닥";
   var tv="https://www.tradingview.com/chart/?symbol=KRX%3A"+encodeURIComponent(it.code)+"&interval=W";
   var nv="https://m.stock.naver.com/domestic/stock/"+encodeURIComponent(it.code)+"/total";
-  return '<article class="card s-'+s.cls+'">'
+  var out=it.check&&it.check.verdict==="제외";
+  return '<article class="card s-'+s.cls+(out?" s-out":"")+'">'
    +'<span class="st-pill">'+s.label+'</span>'
    +'<div class="card-top"><div><div class="nm">'+esc(it.name)+'<span class="code tnum">'+esc(it.code)+'</span></div>'
    +'<div class="sub">'+mkt+' · 조건주 '+esc((it.cond_week||"—").slice(5).replace("-","/"))+' · 이번 주 '+esc(it.bar)+'</div></div>'
@@ -303,7 +334,8 @@ function card(it){
    +'<div class="legend"><span><i style="background:var(--ma)"></i>104주선 '+won(it.ma104)+'</span>'
    +'<span><i style="background:var(--stop)"></i>손절선</span>'
    +'<span class="num">26주 '+won(it.ma26)+' · 52주 '+won(it.ma52)+'</span></div>'
-   +'<div class="todo">'+s.todo+'</div>'
+   +checkBlock(it.check)
+   +'<div class="todo">'+(out?"체크에 걸려 매수하지 않아요":s.todo)+'</div>'
    +'<div class="links"><a href="'+nv+'" target="_blank" rel="noopener">네이버증권</a><a href="'+tv+'" target="_blank" rel="noopener">트레이딩뷰 주봉</a></div>'
    +'</article>';
 }
@@ -350,6 +382,7 @@ function sectionRules(){
    +'<tr><th>익절</th><td><b>+12% 전량</b>, 매수 직후 예약매도</td></tr>'
    +'<tr><th>손절</th><td>직전 양봉 묶음 저가를 <b>금요일 종가로</b> 깨면 청산</td></tr>'
    +'<tr><th>비중</th><td>종목당 5% (150만 원), 최대 8종목</td></tr>'
+   +'<tr><th>체크</th><td>관리·경고·거래정지, 감사의견·자본잠식, 6개월 내 증자·감자·분할 공시가 있으면 <b>제외</b> (자동 판정)</td></tr>'
    +'<tr><th>금지</th><td>+12% 넘어서 "더 갈 것 같아서" 버티기</td></tr>'
    +'</table><p class="note">2005~2026년 약 1,760건 검증에서 +12% 전량 익절이 수익·낙폭·안정성 모두 가장 좋았어요.</p></section>';
 }
@@ -504,7 +537,7 @@ function render(d,L){
     }).join("")+'</nav></section>';
 
   var ckKey="bdg-check-"+d.scan_date;
-  document.getElementById("app").innerHTML=head+sectionStates(d)+'<div style="height:12px"></div>'+miniAcct(L)+sectionDiff(d.diff)+sectionCheck(ckKey)+sectionRules();
+  document.getElementById("app").innerHTML=head+sectionStates(d)+'<div style="height:12px"></div>'+miniAcct(L)+sectionDiff(d.diff)+sectionRules();
   var box=document.getElementById("checklist");
   box&&box.addEventListener("change",function(){
     var o={}; box.querySelectorAll("input").forEach(function(x){if(x.checked)o[x.getAttribute("data-i")]=1});
