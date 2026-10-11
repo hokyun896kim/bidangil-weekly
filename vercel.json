@@ -1,0 +1,9 @@
+{
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": "docs",
+  "headers": [
+    { "source": "/data/(.*)", "headers": [ { "key": "Cache-Control", "value": "no-store" } ] }
+  ]
+}
