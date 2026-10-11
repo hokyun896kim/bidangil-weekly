@@ -104,41 +104,29 @@ function itemRow(w, it, detailed) {
   const a = rr.addStack(); a.addSpacer(); txt(a, won(it.close), 14, C.text, true);
   if (!detailed) { const b = rr.addStack(); b.addSpacer(); txt(b, `손절 ${pct(it.stop_pct)}`, 10, C.down); }
 }
-function acctRow(w, L, big) {
-  if (!L || !L.stats || !L.stats.equity) return;
-  const e = L.stats.equity, a = L.stats.account || {};
-  const box = w.addStack(); box.backgroundColor = C.fill; box.cornerRadius = 12; box.setPadding(8, 10, 8, 10); box.centerAlignContent();
-  const l = box.addStack(); l.layoutVertically();
-  txt(l, "가상계좌", 10, C.muted);
-  const v = l.addStack(); v.centerAlignContent();
-  txt(v, man(e.now), big ? 17 : 15, C.text, true); v.addSpacer(5);
-  txt(v, pct(e.ret_pct), big ? 13 : 12, sgnCol(e.ret_pct), true);
-  box.addSpacer();
-  const r = box.addStack(); r.layoutVertically();
-  const r1 = r.addStack(); r1.addSpacer(); txt(r1, a.closed ? `${a.wins}승 ${a.losses}패` : "청산 없음", 12, C.text, true);
-  const r2 = r.addStack(); r2.addSpacer(); txt(r2, `보유 ${(L.open_positions || []).length} · MDD ${pct(e.mdd_pct, false)}`, 10, C.muted);
-}
-
 // ── 크기별 ──
-function small(w, d, L) {
+function empty(w) {
+  txt(w, "이번 주 신호 없음", 13, C.muted, true);
+  txt(w, "몇 주 연속 0건도 흔해요", 11, C.faint);
+}
+function small(w, d) {
   header(w, d, true); w.addSpacer(6);
   const hl = headline(d); txt(w, hl.s, 18, hl.col, true);
-  w.addSpacer(4);
-  const top = (d.items || [])[0];
-  if (top) {
+  w.addSpacer(6);
+  const items = (d.items || []).slice(0, 2);
+  if (!items.length) txt(w, "신호 없음 · 정상", 11, C.muted);
+  items.forEach(it => {
     const s = w.addStack(); s.centerAlignContent();
-    txt(s, top.name, 12, C.text, true); s.addSpacer(4);
-    if (top.check) txt(s, top.check.verdict, 10, VERD[top.check.verdict] || C.muted, true);
-    txt(w, `손절 ${pct(top.stop_pct)} · ${won(top.close)}`, 10, C.muted);
-  } else txt(w, "신호 없음 · 정상", 11, C.muted);
+    const dot = s.addStack(); dot.size = new Size(5, 14); dot.cornerRadius = 2.5;
+    dot.backgroundColor = (ST[it.state] || ST["대기"]).col;
+    s.addSpacer(5); txt(s, it.name, 12, C.text, true); s.addSpacer(4);
+    if (it.check) txt(s, it.check.verdict, 10, VERD[it.check.verdict] || C.muted, true);
+    txt(w, `손절 ${pct(it.stop_pct)} · ${won(it.close)}`, 10, C.muted);
+    w.addSpacer(3);
+  });
   w.addSpacer();
-  if (L && L.stats && L.stats.equity) {
-    const s = w.addStack(); s.centerAlignContent();
-    txt(s, "계좌 ", 10, C.muted); txt(s, pct(L.stats.equity.ret_pct), 12, sgnCol(L.stats.equity.ret_pct), true);
-    s.addSpacer(); txt(s, `보유 ${(L.open_positions || []).length}`, 10, C.muted);
-  }
 }
-function medium(w, d, L) {
+function medium(w, d) {
   header(w, d); w.addSpacer(6);
   const row = w.addStack(); row.topAlignContent();
   const left = row.addStack(); left.layoutVertically(); left.size = new Size(118, 0);
@@ -146,34 +134,25 @@ function medium(w, d, L) {
   const cr = left.addStack(); countsRow(cr, d, 15);
   row.addSpacer(12);
   const right = row.addStack(); right.layoutVertically();
-  const items = (d.items || []).slice(0, 3);
-  if (!items.length) { right.addSpacer(10); txt(right, "이번 주 신호 없음", 13, C.muted); txt(right, "몇 주 연속 0건도 흔해요", 11, C.faint); }
-  items.forEach((it, i) => { itemRow(right, it, false); if (i < items.length - 1) right.addSpacer(6); });
+  const items = (d.items || []).slice(0, 4);
+  if (!items.length) { right.addSpacer(10); empty(right); }
+  items.forEach((it, i) => { itemRow(right, it, false); if (i < items.length - 1) right.addSpacer(5); });
   w.addSpacer();
-  acctRow(w, L, false);
 }
-function large(w, d, L) {
+function large(w, d) {
   header(w, d); w.addSpacer(6);
   const hl = headline(d); txt(w, hl.s, 22, hl.col, true); w.addSpacer(10);
   const cr = w.addStack(); countsRow(cr, d, 18);
-  w.addSpacer(12);
-  const items = (d.items || []).slice(0, 4);
-  if (!items.length) txt(w, "이번 주 신호가 없어요. 정상이에요.", 13, C.muted);
-  items.forEach((it, i) => { itemRow(w, it, true); if (i < items.length - 1) w.addSpacer(8); });
+  w.addSpacer(14);
+  const items = (d.items || []).slice(0, 5);
+  if (!items.length) empty(w);
+  items.forEach((it, i) => {
+    itemRow(w, it, true);
+    const rs = ((it.check || {}).reasons || []).slice(0, 2);
+    rs.forEach(r => { const l = w.addStack(); l.addSpacer(14); txt(l, `${r.level} · ${r.text}${r.date ? " " + r.date : ""}`, 10, r.level === "제외" ? C.buy : C.wait); });
+    if (i < items.length - 1) w.addSpacer(8);
+  });
   w.addSpacer();
-  const op = (L && L.open_positions) || [];
-  if (op.length) {
-    txt(w, "보유 종목", 11, C.muted); w.addSpacer(3);
-    op.slice(0, 3).forEach(p => {
-      const r = w.addStack(); r.centerAlignContent();
-      txt(r, p.name, 12, C.text, true); r.addSpacer();
-      txt(r, pct(p.unreal_pct), 12, sgnCol(p.unreal_pct), true);
-      r.addSpacer(8); txt(r, `손절까지 ${pct(p.to_stop_pct)}`, 10, C.muted);
-      w.addSpacer(2);
-    });
-    w.addSpacer(8);
-  }
-  acctRow(w, L, true);
 }
 
 // ── 실행 ──
@@ -184,16 +163,16 @@ w.setPadding(14, 14, 12, 14);
 w.url = BASE;
 w.refreshAfterDate = new Date(Date.now() + 3 * 3600 * 1000);   // 3시간마다 새로고침 시도
 
-const [A, B] = await Promise.all([load("latest.json"), load("ledger.json")]);
-const d = A.data, L = B.data;
+const A = await load("latest.json");
+const d = A.data;
 if (!d) {
   txt(w, "비단길 주봉", 13, C.muted, true); w.addSpacer(6);
   txt(w, "데이터를 못 불러왔어요", 14, C.text, true);
   txt(w, "인터넷 연결 후 다시 시도", 11, C.muted);
 } else {
-  if (fam === "small") small(w, d, L);
-  else if (fam === "medium") medium(w, d, L);
-  else large(w, d, L);
+  if (fam === "small") small(w, d);
+  else if (fam === "medium") medium(w, d);
+  else large(w, d);
   if (A.stale) { w.addSpacer(2); txt(w, "오프라인 · 마지막 저장본", 9, C.faint); }
 }
 
