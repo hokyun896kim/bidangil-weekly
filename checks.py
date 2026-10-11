@@ -19,6 +19,7 @@
 원천: m.stock.naver.com 공개 API (키 불필요), FinanceDataReader KRX 목록의 소속부(Dept)
 """
 import datetime as dt
+import html
 import json
 import re
 import time
@@ -71,7 +72,7 @@ def _disclosures(code, days=400, max_pages=5):
                 t = dt.datetime.fromisoformat(r["datetime"][:19])
             except Exception:
                 continue
-            out.append((t, r.get("title", "")))
+            out.append((t, html.unescape(r.get("title", ""))))
         if out and out[-1][0] < cutoff:
             break
     return out if out or rows is not None else None
@@ -85,7 +86,7 @@ def _news(code, n=3):
             for it in g.get("items", [])[:1]:
                 d = it.get("datetime", "")
                 out.append({"date": f"{d[4:6]}/{d[6:8]}" if len(d) >= 8 else "",
-                            "title": it.get("titleFull") or it.get("title", ""),
+                            "title": html.unescape(html.unescape(it.get("titleFull") or it.get("title", ""))),
                             "office": it.get("officeName", ""),
                             "url": it.get("mobileNewsUrl", "")})
     return out[:n]
